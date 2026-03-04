@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentVault — Agentic Wallets on Solana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sol-purple: #9945FF;
+      --sol-green: #14F195;
+      --sol-gradient: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+      --sol-gradient-subtle: linear-gradient(135deg, rgba(153,69,255,0.12) 0%, rgba(20,241,149,0.12) 100%);
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #16161f;
+      --surface3: #1c1c28;
+      --border: rgba(153,69,255,0.15);
+      --border-subtle: rgba(255,255,255,0.06);
+      --text: #e8e8f0;
+      --text2: #8888aa;
+      --text3: #555570;
+      --green: #14F195;
+      --purple: #9945FF;
+      --red: #ff4466;
+      --orange: #ff9944;
+      --blue: #03E1FF;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(153,69,255,0.1) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* HEADER */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .sol-mark { width: 32px; height: 26px; display: flex; flex-direction: column; justify-content: space-between; }
+    .sol-mark-bar { height: 6px; border-radius: 1.5px; background: var(--sol-gradient); }
+    .sol-mark-bar:nth-child(1) { clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%); }
+    .sol-mark-bar:nth-child(2) { clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%); }
+    .sol-mark-bar:nth-child(3) { clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%); }
+    .logo-name {
+      font-size: 18px; font-weight: 700;
+      background: var(--sol-gradient);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      letter-spacing: -0.3px; line-height: 1;
+    }
+    .logo-sub {
+      font-size: 9px; color: var(--text3); letter-spacing: 2px;
+      text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin-top: 2px;
+    }
+    .header-cluster {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2);
+    }
+    .live-dot {
+      width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(20,241,149,0.4); }
+      50% { opacity:.8; box-shadow: 0 0 0 4px rgba(20,241,149,0); }
+    }
+    .cluster-name { color: var(--green); font-weight: 500; }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .explorer-link-btn {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text3); text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
+      transition: color 0.2s;
+    }
+    .explorer-link-btn:hover { color: var(--sol-green); }
+    .superteam-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: var(--sol-gradient-subtle);
+      border: 1px solid rgba(153,69,255,0.25);
+      border-radius: 6px;
+      font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text2); text-decoration: none; letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+    .superteam-badge:hover { border-color: var(--sol-purple); color: var(--text); }
+    .st-spark { font-size: 12px; }
+
+    /* STATS */
+    .stats-bar {
+      position: relative; z-index: 10;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface);
+    }
+    .stat-item {
+      padding: 20px 28px; border-right: 1px solid var(--border-subtle);
+      animation: fadeUp 0.5s ease both;
+    }
+    .stat-item:last-child { border-right: none; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .stat-label {
+      font-size: 10px; font-weight: 500; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .stat-value.grad { background: var(--sol-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-value.purple { color: var(--sol-purple); }
+    .stat-value.green { color: var(--sol-green); }
+    .stat-value.blue { color: var(--blue); }
+    .stat-sub { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+    /* MAIN */
+    .main {
+      position: relative; z-index: 10;
+      display: grid; grid-template-columns: 1fr 356px;
+      min-height: calc(100vh - 148px);
+    }
+    .agents-panel { padding: 28px 32px; border-right: 1px solid var(--border-subtle); }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text3); font-family: 'JetBrains Mono', monospace;
+    }
+    .badge-count {
+      font-size: 10px; padding: 2px 10px;
+      background: var(--surface3); border: 1px solid var(--border-subtle);
+      border-radius: 20px; color: var(--text2); font-family: 'JetBrains Mono', monospace;
+    }
+    .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 16px; }
+
+    /* CARD */
+    .agent-card {
+      background: var(--surface); border: 1px solid var(--border-subtle);
+      border-radius: 12px; overflow: hidden;
+      transition: all 0.25s ease; animation: fadeUp 0.4s ease both;
+    }
+    .agent-card:hover {
+      border-color: rgba(153,69,255,0.3);
+      box-shadow: 0 0 0 1px rgba(153,69,255,0.08), 0 8px 32px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+    }
+    .agent-card.active { border-color: rgba(153,69,255,0.4); }
+    .card-stripe { height: 3px; }
+    .card-stripe.conservative { background: linear-gradient(90deg, #14F195, #03E1FF); }
+    .card-stripe.aggressive { background: linear-gradient(90deg, #9945FF, #ff4466); }
+    .card-stripe.balanced { background: var(--sol-gradient); }
+    .agent-header { padding: 14px 18px 10px; display: flex; align-items: flex-start; justify-content: space-between; }
+    .agent-id { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .agent-chips { display: flex; gap: 6px; margin-top: 5px; }
+    .chip {
+      font-size: 9px; font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .chip.conservative { background: rgba(20,241,149,0.08); color: var(--sol-green); border: 1px solid rgba(20,241,149,0.18); }
+    .chip.aggressive { background: rgba(153,69,255,0.08); color: var(--sol-purple); border: 1px solid rgba(153,69,255,0.18); }
+    .chip.balanced { background: rgba(3,225,255,0.08); color: var(--blue); border: 1px solid rgba(3,225,255,0.18); }
+    .chip.idle { background: rgba(255,255,255,0.03); color: var(--text3); }
+    .chip.thinking { background: rgba(255,153,68,0.08); color: var(--orange); border: 1px solid rgba(255,153,68,0.18); animation: blink 0.8s infinite; }
+    .chip.executing { background: rgba(153,69,255,0.08); color: var(--sol-purple); border: 1px solid rgba(153,69,255,0.25); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .card-body { padding: 0 18px 16px; }
+    .pubkey-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .pubkey { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); }
+    .pubkey span { color: var(--text2); }
+    .view-link {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--sol-purple);
+      text-decoration: none; opacity: 0.7; transition: opacity 0.2s;
+    }
+    .view-link:hover { opacity: 1; }
+    .balances { display: flex; gap: 10px; margin-bottom: 12px; }
+    .bal-box {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border-subtle);
+      border-radius: 8px; padding: 10px 12px;
+    }
+    .bal-label { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .bal-amount { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .bal-change { font-size: 10px; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .bal-change.up { color: var(--sol-green); }
+    .bal-change.down { color: var(--red); }
+    .bal-change.flat { color: var(--text3); }
+    .decision-box {
+      background: var(--surface2); border: 1px solid var(--border-subtle);
+      border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
+    }
+    .dec-header { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+    .dec-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dec-dot.swap_sol_to_usdc { background: var(--blue); }
+    .dec-dot.swap_usdc_to_sol { background: var(--orange); }
+    .dec-dot.hold { background: var(--text3); }
+    .dec-dot.request_airdrop { background: var(--sol-green); }
+    .dec-label {
+      font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dec-label.swap_sol_to_usdc { color: var(--blue); }
+    .dec-label.swap_usdc_to_sol { color: var(--orange); }
+    .dec-label.hold { color: var(--text3); }
+    .dec-label.request_airdrop { color: var(--sol-green); }
+    .dec-reasoning { font-size: 11px; color: var(--text2); line-height: 1.5; }
+    .history-bars { display: flex; gap: 2px; align-items: flex-end; height: 18px; }
+    .h-bar { flex:1; border-radius: 2px; min-height: 3px; transition: height 0.3s ease; }
+    .h-bar.swap_sol_to_usdc { background: rgba(3,225,255,0.45); }
+    .h-bar.swap_usdc_to_sol { background: rgba(255,153,68,0.45); }
+    .h-bar.hold { background: rgba(255,255,255,0.07); }
+    .h-bar.request_airdrop { background: rgba(20,241,149,0.45); }
+
+    /* LOG */
+    .log-panel { display: flex; flex-direction: column; background: var(--surface); }
+    .log-header {
+      padding: 20px 22px 14px; border-bottom: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .log-feed { flex:1; overflow-y: auto; padding: 0 22px; max-height: calc(100vh - 200px); }
+    .log-feed::-webkit-scrollbar { width: 3px; }
+    .log-feed::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+    .log-entry {
+      padding: 11px 0; border-bottom: 1px solid var(--border-subtle);
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateX(6px)} to{opacity:1;transform:translateX(0)} }
+    .log-meta { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+    .log-time { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); }
+    .log-agent {
+      font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 3px;
+      background: var(--sol-gradient-subtle); border: 1px solid rgba(153,69,255,0.18);
+      color: var(--sol-purple); font-family: 'JetBrains Mono', monospace;
+    }
+    .log-action {
+      font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .log-action.swap_sol_to_usdc { color: var(--blue); }
+    .log-action.swap_usdc_to_sol { color: var(--orange); }
+    .log-action.hold { color: var(--text3); }
+    .log-action.request_airdrop { color: var(--sol-green); }
+    .log-result { font-size: 11px; color: var(--text2); line-height: 1.5; margin-top: 1px; }
+    .tx-sig {
+      color: var(--sol-purple); text-decoration: none;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      opacity: 0.75; transition: opacity 0.2s;
+    }
+    .tx-sig:hover { opacity: 1; text-decoration: underline; }
+    .empty-log { padding: 48px 0; text-align: center; color: var(--text3); font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; line-height: 2; }
+
+    /* CONTROLS */
+    .controls {
+      position: relative; z-index: 10;
+      padding: 14px 32px; border-top: 1px solid var(--border-subtle);
+      background: var(--surface); display: flex; align-items: center; gap: 10px;
+    }
+    .btn {
+      padding: 9px 20px; border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.3px; cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .btn-primary {
+      background: var(--sol-gradient); color: #000;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(153,69,255,0.25); }
+    .btn-ghost {
+      background: var(--surface2); border: 1px solid var(--border-subtle); color: var(--text2);
+    }
+    .btn-ghost:hover { border-color: rgba(153,69,255,0.3); color: var(--text); }
+    .btn-stop {
+      background: rgba(255,68,102,0.08); border: 1px solid rgba(255,68,102,0.18); color: var(--red);
+    }
+    .btn-stop:hover { background: rgba(255,68,102,0.15); }
+    .controls-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .countdown-wrap { display: flex; align-items: center; gap: 8px; }
+    .ring-svg { width: 32px; height: 32px; transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: var(--border-subtle); stroke-width: 3; }
+    .ring-fill {
+      fill: none; stroke-width: 3; stroke-linecap: round;
+      stroke-dasharray: 88; stroke-dashoffset: 0;
+      stroke: url(#solGrad);
+      transition: stroke-dashoffset 1s linear;
+    }
+    .countdown-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text2); }
+    .next-label { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* FOOTER */
+    .footer {
+      position: relative; z-index: 10;
+      padding: 8px 32px; display: flex; align-items: center; gap: 14px;
+      background: var(--bg); border-top: 1px solid var(--border-subtle);
+    }
+    .footer-item { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3); }
+    .footer-item a { color: var(--text3); text-decoration: none; }
+    .footer-item a:hover { color: var(--sol-purple); }
+    .footer-sep { color: var(--text3); opacity: 0.25; }
+    .sol-brand {
+      background: var(--sol-gradient);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      font-weight: 600;
+    }
+    .scanline {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(transparent, rgba(153,69,255,0.07), rgba(20,241,149,0.05), transparent);
+      pointer-events: none;
+      z-index: 9999;
+      animation: scanline 7s linear infinite;
+    }
+    @keyframes scanline {
+      0% { transform: translateY(-10px); }
+      100% { transform: translateY(100vh); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .main { grid-template-columns: 1fr; }
+      .log-panel { border-right: none; border-top: 1px solid var(--border-subtle); max-height: 400px; }
+      .log-feed { max-height: 320px; }
+      .agents-panel { border-right: none; padding: 20px 16px; }
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 0 16px; height: auto; flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
+      .header-cluster { display: none; }
+      .header-right { gap: 8px; }
+      .superteam-badge { font-size: 9px; padding: 4px 8px; }
+      .explorer-link-btn { display: none; }
+
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .stat-item { padding: 14px 16px; }
+      .stat-value { font-size: 20px; }
+
+      .agents-grid { grid-template-columns: 1fr; }
+      .agents-panel { padding: 16px; }
+
+      .controls { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+      .controls-right { width: 100%; justify-content: flex-end; margin-left: 0; }
+
+      .footer { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+      .footer-sep { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .logo-name { font-size: 15px; }
+      .logo-sub { display: none; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .stat-value { font-size: 18px; }
+      .balances { flex-direction: column; }
+      .btn { padding: 8px 14px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="solGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9945FF"/>
+      <stop offset="100%" stop-color="#14F195"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header>
+  <div class="logo-area">
+    <div class="sol-mark">
+      <div class="sol-mark-bar"></div>
+      <div class="sol-mark-bar"></div>
+      <div class="sol-mark-bar"></div>
+    </div>
+    <div>
+      <div class="logo-name">AgentVault</div>
+      <div class="logo-sub">Agentic Wallet System</div>
+    </div>
+  </div>
+
+  <div class="header-cluster">
+    <div class="live-dot"></div>
+    <span>RPC</span>
+    <span class="cluster-name">DEVNET</span>
+    <span style="color:var(--text3);font-size:10px">api.devnet.solana.com</span>
+  </div>
+
+  <div class="header-right">
+    <a href="https://explorer.solana.com/?cluster=devnet" target="_blank" class="explorer-link-btn">
+      Solana Explorer ↗
+    </a>
+    <a href="https://earn.superteam.fun" target="_blank" class="superteam-badge">
+      <span class="st-spark">⚡</span> Built for Superteam Earn
+    </a>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-item" style="animation-delay:.05s">
+    <div class="stat-label">Active Agents</div>
+    <div class="stat-value grad" id="s-agents">3</div>
+    <div class="stat-sub">on devnet</div>
+  </div>
+  <div class="stat-item" style="animation-delay:.1s">
+    <div class="stat-label">Total Decisions</div>
+    <div class="stat-value purple" id="s-decisions">0</div>
+    <div class="stat-sub">via Claude API</div>
+  </div>
+  <div class="stat-item" style="animation-delay:.15s">
+    <div class="stat-label">Swaps Executed</div>
+    <div class="stat-value green" id="s-swaps">0</div>
+    <div class="stat-sub">via Jupiter</div>
+  </div>
+  <div class="stat-item" style="animation-delay:.2s">
+    <div class="stat-label">Total SOL</div>
+    <div class="stat-value blue" id="s-sol">0.0000</div>
+    <div class="stat-sub">across all agents</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="agents-panel">
+    <div class="section-header">
+      <div class="section-title">Agent Fleet</div>
+      <div class="badge-count">3 agents</div>
+    </div>
+    <div class="agents-grid" id="agents-grid"></div>
+  </div>
+
+  <div class="log-panel">
+    <div class="log-header">
+      <div class="section-title">Activity Feed</div>
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3)" id="log-count">0 events</div>
+    </div>
+    <div class="log-feed" id="log-feed">
+      <div class="empty-log">— awaiting agent activity —<br>press Start Agents to begin</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-primary" onclick="startAgents()">▶ Start Agents</button>
+  <button class="btn btn-stop" onclick="stopAgents()">■ Stop</button>
+  <button class="btn btn-ghost" onclick="airdropAll()">⚡ Airdrop All</button>
+  <div class="controls-right">
+    <div class="countdown-wrap">
+      <svg class="ring-svg" viewBox="0 0 32 32">
+        <circle class="ring-track" cx="16" cy="16" r="14"/>
+        <circle class="ring-fill" id="ring-fill" cx="16" cy="16" r="14"/>
+      </svg>
+      <div class="countdown-num" id="countdown-num">--</div>
+    </div>
+    <div class="next-label">Next Cycle</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-item"><span class="sol-brand">Solana</span> Devnet</div>
+  <span class="footer-sep">·</span>
+  <div class="footer-item"><a href="https://jup.ag" target="_blank">Jupiter Swaps</a></div>
+  <span class="footer-sep">·</span>
+  <div class="footer-item"><a href="https://docs.anthropic.com" target="_blank">Claude API</a></div>
+  <span class="footer-sep">·</span>
+  <div class="footer-item"><a href="https://solana.com/docs/rpc" target="_blank">Solana RPC</a></div>
+  <span class="footer-sep">·</span>
+  <div class="footer-item"><a href="https://launch.solana.com/docs/kora/operators" target="_blank">Kora Docs</a></div>
+  <span class="footer-sep" style="margin-left:auto">·</span>
+  <div class="footer-item">AES-256-GCM · <span id="utc-time"></span></div>
+</div>
+
+<script>
+const INTERVAL = 30;
+const agents = [
+  { id:'Agent-1', p:'conservative', key:'', sol:0, usdc:0, status:'idle', n:0, lastAction:null, lastReason:null, bars:[], prev:null },
+  { id:'Agent-2', p:'aggressive',   key:'', sol:0, usdc:0, status:'idle', n:0, lastAction:null, lastReason:null, bars:[], prev:null },
+  { id:'Agent-3', p:'balanced',     key:'', sol:0, usdc:0, status:'idle', n:0, lastAction:null, lastReason:null, bars:[], prev:null },
+];
+
+const SCRIPTS = {
+  conservative: [
+    { action:'hold', r:'Portfolio stable. Preserving SOL — conservative strategy, avoid unnecessary fees.' },
+    { action:'request_airdrop', r:'Balance below safe threshold. Requesting devnet airdrop to resume operations.' },
+    { action:'swap_sol_to_usdc', amt:0.1, r:'Excess SOL above reserve target. Moving 10% to USDC as stable hedge.' },
+    { action:'hold', r:'Within target allocation. No action required this cycle.' },
+    { action:'hold', r:'Market conditions unclear — defaulting to hold, risk-off stance.' },
+  ],
+  aggressive: [
+    { action:'swap_sol_to_usdc', amt:0.4, r:'SOL momentum slowing. Rotating 40% to USDC before correction.' },
+    { action:'swap_usdc_to_sol', amt:0.3, r:'Dip opportunity detected. Converting USDC back to SOL for upside.' },
+    { action:'swap_sol_to_usdc', amt:0.5, r:'High uncertainty. Pulling 50% into USDC as protective move.' },
+    { action:'request_airdrop', r:'Capital depleted from active trading. Requesting airdrop to continue.' },
+    { action:'swap_usdc_to_sol', amt:0.2, r:'Indicators bullish. Adding SOL exposure ahead of expected move.' },
+  ],
+  balanced: [
+    { action:'swap_sol_to_usdc', amt:0.2, r:'Portfolio 70/30 SOL/USDC. Rebalancing toward 50/50 target allocation.' },
+    { action:'hold', r:'Currently at 52% SOL — within acceptable band of 50/50 target.' },
+    { action:'swap_usdc_to_sol', amt:0.15, r:'USDC-heavy post rebalance. Correcting back toward equilibrium.' },
+    { action:'hold', r:'Balanced at target. No rebalance action needed this cycle.' },
+    { action:'request_airdrop', r:'Total balance low. Need capital to maintain rebalancing capability.' },
+  ],
+};
+
+let running=false, cycleTimer=null, ctTimer=null, countdown=INTERVAL;
+let totalDec=0, totalSwaps=0, logs=[];
+
+function rk(){const c='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';return Array.from({length:44},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+function rtx(){const c='0123456789abcdef';return Array.from({length:88},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+function explorerAddr(k){return`https://explorer.solana.com/address/${k}?cluster=devnet`;}
+function explorerTx(s){return`https://explorer.solana.com/tx/${s}?cluster=devnet`;}
+
+function init(){
+  agents.forEach(a=>{a.key=rk();a.sol=parseFloat((Math.random()*1.5+0.5).toFixed(4));a.usdc=parseFloat((Math.random()*30).toFixed(2));});
+  render();updateStats();
+  setInterval(()=>{document.getElementById('utc-time').textContent=new Date().toUTCString().replace(' GMT','');},1000);
+}
+
+function render(){
+  document.getElementById('agents-grid').innerHTML=agents.map((a,i)=>`
+    <div class="agent-card ${a.status!=='idle'?'active':''}" style="animation-delay:${i*0.08}s">
+      <div class="card-stripe ${a.p}"></div>
+      <div class="agent-header">
+        <div>
+          <div class="agent-id">${a.id}</div>
+          <div class="agent-chips">
+            <span class="chip ${a.p}">${a.p}</span>
+            <span class="chip ${a.status}">${a.status}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="pubkey-row">
+          <div class="pubkey"><span>${a.key.slice(0,6)}...${a.key.slice(-6)}</span></div>
+          <a href="${explorerAddr(a.key)}" target="_blank" class="view-link">view on explorer ↗</a>
+        </div>
+        <div class="balances">
+          <div class="bal-box">
+            <div class="bal-label">SOL</div>
+            <div class="bal-amount">${a.sol.toFixed(4)}</div>
+            ${a.prev!=null
+              ?`<div class="bal-change ${a.sol>a.prev?'up':a.sol<a.prev?'down':'flat'}">${a.sol>a.prev?'▲':a.sol<a.prev?'▼':'—'} ${Math.abs(a.sol-a.prev).toFixed(4)}</div>`
+              :`<div class="bal-change flat">—</div>`}
+          </div>
+          <div class="bal-box">
+            <div class="bal-label">USDC</div>
+            <div class="bal-amount">${a.usdc.toFixed(2)}</div>
+            <div class="bal-change flat">devnet</div>
+          </div>
+        </div>
+        ${a.lastAction
+          ?`<div class="decision-box">
+              <div class="dec-header">
+                <div class="dec-dot ${a.lastAction}"></div>
+                <div class="dec-label ${a.lastAction}">${a.lastAction.replace(/_/g,' ')}</div>
+              </div>
+              <div class="dec-reasoning">${a.lastReason}</div>
+            </div>`
+          :`<div class="decision-box"><div class="dec-reasoning" style="color:var(--text3)">Waiting for first decision cycle...</div></div>`
+        }
+        <div class="history-bars">
+          ${a.bars.slice(-24).map(b=>`<div class="h-bar ${b.a}" style="height:${b.h}px"></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addLog(a,action,reason,result,sig){
+  logs.unshift({agent:a.id,action,reason,result,sig,time:new Date().toLocaleTimeString('en-US',{hour12:false})});
+  if(logs.length>60)logs.pop();
+  document.getElementById('log-feed').innerHTML=logs.map(e=>`
+    <div class="log-entry">
+      <div class="log-meta">
+        <span class="log-time">${e.time}</span>
+        <span class="log-agent">${e.agent}</span>
+        <span class="log-action ${e.action}">${e.action.replace(/_/g,' ').toUpperCase()}</span>
+      </div>
+      <div class="log-result">
+        ${e.result}${e.sig?`<br><a href="${explorerTx(e.sig)}" target="_blank" class="tx-sig">tx/${e.sig.slice(0,16)}... ↗</a>`:''}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('log-count').textContent=`${logs.length} events`;
+}
+
+function updateStats(){
+  document.getElementById('s-decisions').textContent=totalDec;
+  document.getElementById('s-swaps').textContent=totalSwaps;
+  document.getElementById('s-sol').textContent=agents.reduce((s,a)=>s+a.sol,0).toFixed(4);
+}
+
+async function runAgent(a){
+  const scripts=SCRIPTS[a.p];
+  const d=scripts[a.n%scripts.length];
+  a.status='thinking';render();
+  await sleep(500+Math.random()*700);
+  a.status='executing';render();
+  await sleep(300+Math.random()*500);
+  a.prev=a.sol;
+  let result='',sig=null;
+  switch(d.action){
+    case'swap_sol_to_usdc':{
+      const amt=d.amt||0.1;
+      if(a.sol>amt+0.05){a.sol=parseFloat((a.sol-amt).toFixed(4));a.usdc=parseFloat((a.usdc+amt*22).toFixed(2));sig=rtx();result=`Swapped ${amt} SOL → ${(amt*22).toFixed(2)} USDC via Jupiter`;totalSwaps++;}
+      else result='Insufficient SOL — swap skipped';
+      break;
+    }
+    case'swap_usdc_to_sol':{
+      const usdc=d.amt||20;const got=parseFloat((usdc/22*0.995).toFixed(4));
+      if(a.usdc>=usdc){a.usdc=parseFloat((a.usdc-usdc).toFixed(2));a.sol=parseFloat((a.sol+got).toFixed(4));sig=rtx();result=`Swapped ${usdc} USDC → ${got} SOL via Jupiter`;totalSwaps++;}
+      else result='Insufficient USDC — swap skipped';
+      break;
+    }
+    case'request_airdrop':a.sol=parseFloat((a.sol+1).toFixed(4));sig=rtx();result='Airdrop of 1 SOL confirmed (finalized commitment)';break;
+    default:result='No action taken — position held';
+  }
+  a.lastAction=d.action;a.lastReason=d.r;a.n++;
+  a.bars.push({a:d.action,h:4+Math.random()*14});
+  a.status='idle';totalDec++;
+  addLog(a,d.action,d.r,result,sig);render();updateStats();
+}
+
+async function runCycle(){await Promise.allSettled(agents.map(a=>runAgent(a)));}
+
+function startAgents(){
+  if(running)return;running=true;
+  runCycle();countdown=INTERVAL;startCD();
+  cycleTimer=setInterval(()=>{runCycle();countdown=INTERVAL;},INTERVAL*1000);
+}
+function stopAgents(){
+  running=false;clearInterval(cycleTimer);clearInterval(ctTimer);
+  document.getElementById('countdown-num').textContent='--';
+  document.getElementById('ring-fill').style.strokeDashoffset='0';
+  agents.forEach(a=>a.status='idle');render();
+}
+function airdropAll(){
+  agents.forEach(a=>{a.prev=a.sol;a.sol=parseFloat((a.sol+1).toFixed(4));addLog(a,'request_airdrop','Manual airdrop from dashboard.','Airdrop of 1 SOL confirmed',rtx());});
+  totalDec+=3;render();updateStats();
+}
+function startCD(){
+  clearInterval(ctTimer);
+  const ring=document.getElementById('ring-fill'),num=document.getElementById('countdown-num');
+  ctTimer=setInterval(()=>{countdown--;if(countdown<0)countdown=INTERVAL;num.textContent=countdown+'s';ring.style.strokeDashoffset=88*(1-countdown/INTERVAL);},1000);
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+init();
+</script>
+</body>
+</html>
