@@ -1,5 +1,5 @@
 {
-  "name": "agentic-wallet",
+  "name": "agentvault",
   "version": "1.0.0",
   "description": "Agentic wallets for AI agents on Solana",
   "main": "dist/index.js",
