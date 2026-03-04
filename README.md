@@ -44,7 +44,7 @@ Each agent is powered by **Claude (Anthropic)** for decision-making and interact
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/yourusername/agentic-wallet
+git clone https://github.com/Elma731/agentvault
 cd agentic-wallet
 npm install
 ```
